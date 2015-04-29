@@ -3,6 +3,8 @@ package main
 import (
 	"github.com/BurntSushi/toml"
 	"io/ioutil"
+	"os/exec"
+	"bytes"
 )
 
 type Config struct {
@@ -14,6 +16,21 @@ type Config struct {
 type Repository struct {
 	Url    string
 	Branch string
+}
+
+func (self *Repository) GetLatestSha() (string ,error) {
+	branch := self.Branch
+	if branch == "" {
+		branch = "master"
+	}
+	cmd := exec.Command("git", "ls-remote", self.Url, branch)
+	cmdOutput := &bytes.Buffer{}
+	cmd.Stdout = cmdOutput
+	err := cmd.Run()
+	if err != nil {
+		return "", err
+	}
+	return cmdOutput.String()[:40], nil
 }
 
 type Registry struct {
