@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os/exec"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -103,8 +105,14 @@ func (self *Dockerfile) CheckIfUpdated(name string) error {
 }
 
 func (self *Dockerfile) Rebuild(name string) error {
+	delayString := strings.Trim(self.Delay, "m")
+	delay, err := strconv.Atoi(delayString)
+	if err != nil {
+		delay = 0
+	}
+	time.Sleep(time.Duration(delay) * time.Minute)
 	cmd := exec.Command("sudo", "docker", "build", "-f", self.Path, "--no-cache", "true", "--force-rm", "true", "-t", name)
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
 		return err
 	}
