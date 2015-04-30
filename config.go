@@ -13,6 +13,7 @@ import (
 )
 
 type Config struct {
+	Interval     string
 	Repositories map[string]*Repository
 	Registries   map[string]*Registry
 	Dockerfiles  map[string]*Dockerfile
@@ -20,7 +21,12 @@ type Config struct {
 }
 
 func (self *Config) startCron() {
-	for _ = range time.Tick(300 * time.Second) {
+	IntervalString := strings.Trim(self.Interval, "m")
+	interval, err := strconv.Atoi(IntervalString)
+	if err != nil {
+		interval = 5
+	}
+	for _ = range time.Tick(time.Duration(interval) * time.Minute) {
 		self.CheckRepositories()
 	}
 	// To exit
