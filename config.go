@@ -35,7 +35,7 @@ func (self *Config) CheckRepositories() {
 			defer wg.Done()
 			err := repository.GetLatestSha()
 			if err != nil {
-				log.Println(err)
+				log.Fatal(err)
 			}
 		}(repository)
 	}
@@ -46,7 +46,7 @@ func (self *Config) CheckRepositories() {
 			defer wg.Done()
 			err := dockerfile.CheckIfUpdated(name)
 			if err != nil {
-				log.Println(err)
+				log.Fatal(err)
 			}
 		}(dockerfile)
 	}
@@ -100,6 +100,10 @@ func (self *Dockerfile) CheckIfUpdated(name string) error {
 		self.RepositoriesSha = repositoriesSha
 		self.Rebuild(name)
 		self.PushToRegistries(name)
+		err := WriteDockerfileSha(name, repositoriesSha)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -134,12 +138,12 @@ func (self *Dockerfile) PushToRegistries(name string) error {
 		cmd := exec.Command("sudo", "docker", "tag", name, remoteImageName)
 		err := cmd.Run()
 		if err != nil {
-			log.Println(err)
+			log.Fatal(err)
 		}
 		cmd = exec.Command("sudo", "docker", "push", remoteImageName)
 		err = cmd.Run()
 		if err != nil {
-			log.Println(err)
+			log.Fatal(err)
 		}
 	}
 	return nil
