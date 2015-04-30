@@ -27,6 +27,7 @@ func (self *Config) startCron() {
 		interval = 5
 	}
 	for _ = range time.Tick(time.Duration(interval) * time.Minute) {
+		log.Println("Checking repositories")
 		self.CheckRepositories()
 	}
 	// To exit
@@ -77,14 +78,16 @@ func (self *Repository) GetLatestSha() error {
 	if err != nil {
 		return err
 	}
+	if self.Sha != cmdOutput.String()[:40] {
+		log.Println(self.Url + " repository updated to '" + self.Sha + "' from '" + self.Sha + "'")
+	}
 	self.Sha = cmdOutput.String()[:40]
 	return nil
 }
 
 type Registry struct {
-	Host     string
-	Port     string
-	Protocol string
+	Host string
+	Port string
 }
 
 type Dockerfile struct {
@@ -103,6 +106,7 @@ func (self *Dockerfile) CheckIfUpdated(name string) error {
 		repositoriesSha += config.Repositories[repositoryName].Sha
 	}
 	if repositoriesSha != self.RepositoriesSha {
+		log.Println(name + " dockerfile updated. Rebuilding")
 		self.RepositoriesSha = repositoriesSha
 		self.Rebuild(name)
 		self.PushToRegistries(name)
@@ -146,6 +150,7 @@ func (self *Dockerfile) PushToRegistries(name string) error {
 		if err != nil {
 			log.Fatal(err)
 		}
+		log.Println(remoteImageName + " image is pushed to remote repository")
 		cmd = exec.Command("sudo", "docker", "push", remoteImageName)
 		err = cmd.Run()
 		if err != nil {
