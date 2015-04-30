@@ -13,4 +13,6 @@ func main() {
 		fmt.Printf("Error while parsing docker-monitor.toml config: %v\n", err.Error())
 		os.Exit(1)
 	}
+	go config.startCron()
+	<-config.Exit
 }
